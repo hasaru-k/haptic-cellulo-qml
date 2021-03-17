@@ -11,6 +11,10 @@ Window {
   height: 480
   title: qsTr("Hello World")
 
+  property double poseX: 1002
+  property double poseY: 16
+  property double poseTheta: 20
+
   CelluloRobot{
       id: robotComm
       property string robotName: "robot1"
@@ -31,7 +35,7 @@ Window {
           Row {
             Button {
               onClicked: {
-                let fakePose = { x: 80, y: 66, theta: 45};
+                let fakePose = { x: poseX, y: poseY, theta: poseTheta};
                 let macAddress = "00:1B:44:11:3A:B7";
                 let message = {
                   type : "sendPose",

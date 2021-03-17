@@ -1,4 +1,4 @@
-﻿let hostname = "http://flask-env.eba-m9sv8kxe.us-east-2.elasticbeanstalk.com/";
+﻿let hostname = "http://cellulo-live.herokuapp.com";
 let localhost = "http://127.0.0.1:5000";
 
 function makeRequest(message)
@@ -18,22 +18,30 @@ function sendPose(contents) {
   console.log(JSON.stringify(contents));
 
   var xhr = new XMLHttpRequest();
-  let url = localhost + "/pose1" 
-    + "/" + contents.macAddress 
-    + "/" + contents.pose.x 
-    + "/" + contents.pose.y 
-    + "/" + contents.pose.theta;
-    
+  let params = serialisePoseMessage(contents);
+  let url = hostname + "/pose/" + params;
   console.log(url);
   xhr.open("POST", url, true);
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xhr.setRequestHeader("Connection", "close");
 
   xhr.onreadystatechange = function() {
-      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-          // Request finished. Do processing here.
-          console.log(xhr.responseText);
-      }
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+        // Request finished. Do processing here.
+        console.log("Received:" + xhr.responseText);
+    }
   }
+
   xhr.send();
+}
+
+function serialisePoseMessage(contents) {
+  return "?" +
+  "macAddress=" + contents.macAddress +
+  "&" +
+  "x=" + contents.pose.x +
+  "&" +
+  "y=" + contents.pose.y +
+  "&" +
+  "theta=" + contents.pose.theta;
 }
