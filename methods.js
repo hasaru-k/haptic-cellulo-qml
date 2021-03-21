@@ -5,7 +5,7 @@ function makeRequest(message)
 {
 
   console.log(JSON.stringify(message));
-  if (message.type == "sendPose") {
+  if (message.type === "sendPose") {
     sendPose(message.contents);
   } else {
     throw "Unsupported message type" + message.type;
@@ -37,7 +37,7 @@ function sendPose(contents) {
 
 function serialisePoseMessage(contents) {
   return "?" +
-  "macAddress=" + contents.macAddress +
+  "name=" + contents.name +
   "&" +
   "x=" + contents.pose.x +
   "&" +

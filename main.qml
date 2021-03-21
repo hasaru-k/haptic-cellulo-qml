@@ -11,36 +11,70 @@ Window {
   height: 480
   title: qsTr("Hello World")
 
-  property double poseX: 1002
-  property double poseY: 16
-  property double poseTheta: 20
+  property string name: "player3"
+  property double poseX: 12
+  property double poseY: 13
+  property double poseTheta: 5
 
-  CelluloRobot{
+  CelluloRobot {
       id: robotComm
       property string robotName: "robot1"
       Component.onCompleted: {}
       onZoneValueChanged: {}
-      onPoseChanged: {}
+      onPoseChanged: {
+          console.log(x);
+          console.log(y);
+          console.log(theta);
+          // update internal state representation
+          poseX = x;
+          poseY = y;
+          poseTheta = theta;
+      }
   }
 
 
-  //Visible items
+  Timer {
+      id: timer
+      interval: 200;
+      running: true;
+      repeat: true
+      // update server with robot's pose every 200ms
+      onTriggered: {
+          poseX += 1;
+          poseY += 1;
+          poseTheta -= 0.3;
+          let message = {
+            type : "sendPose",
+            contents : {
+              name : name,
+              pose : { x: poseX, y: poseY, theta: poseTheta}
+            }
+          };
+          Utils.makeRequest(message);
+      }
+  }
+
+  // Robot connection items
   GroupBox {
       id: addressBox
 
       Column{
-
           spacing: 5
-
+          Row {
+            Label {
+                text: "Current location: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ")"
+                font.pixelSize: 22
+                font.italic: true
+            }
+          }
           Row {
             Button {
               onClicked: {
                 let fakePose = { x: poseX, y: poseY, theta: poseTheta};
-                let macAddress = "00:1B:44:11:3A:B7";
                 let message = {
                   type : "sendPose",
                   contents : {
-                    macAddress : macAddress,
+                    name : name,
                     pose : fakePose
                   }
                 };
@@ -49,8 +83,6 @@ Window {
               text: "Make request"
             }
           }
-
-
           CelluloBluetoothScanner {
               id: scanner
               onRobotDiscovered: {
@@ -61,14 +93,11 @@ Window {
                       newAddresses.sort();
                   }
                   macAddrSelector.addresses = newAddresses;
-
                   QMLCache.write("addresses", macAddrSelector.addresses.join(','));
               }
           }
-
           Row {
               spacing: 5
-
               MacAddrSelector {
                   id: macAddrSelector
                   addresses: QMLCache.read("addresses").split(",")
@@ -79,27 +108,22 @@ Window {
                   onDisconnectRequested: robotComm.disconnectFromServer()
                   connectionStatus: robotComm.connectionStatus
               }
-
-              Button{
+              Button {
                   text: "Reset"
                   onClicked: robotComm.reset()
               }
           }
-
           Row {
               spacing: 5
-
               BusyIndicator {
                   running: scanner.scanning
                   height: scanButton.height
               }
-
               Button {
                   id: scanButton
                   text: "Scan"
                   onClicked: scanner.start()
               }
-
               Button {
                   text: "Clear List"
                   onClicked: {
