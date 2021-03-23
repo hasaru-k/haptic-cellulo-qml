@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>App.qml</file>
         <file>Login.qml</file>
+        <file>cellulo.png</file>
     </qresource>
 </RCC>

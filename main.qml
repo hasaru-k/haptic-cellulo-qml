@@ -7,10 +7,19 @@ import QMLCache 1.0
 
 Window
 {
-    width: login.state == "loggedIn" ? app.width : login.width
-    height: login.state == "loggedIn" ? app.height : login.height
+    minimumWidth: login.state == "loggedIn" ? app.width : 300
+    minimumHeight: login.state == "loggedIn" ? app.height : 400
+    maximumWidth: login.state == "loggedIn" ? app.width : 300
+    maximumHeight: login.state == "loggedIn" ? app.height : 400
     title: qsTr("HapticCellulo")
     visible: true
+    Image
+    {
+        source: "cellulo.png"
+        fillMode: Image.PreserveAspectCrop
+        anchors.centerIn: parent
+        visible: login.state != "loggedIn"
+    }
     App
     {
         id: app

@@ -10,43 +10,31 @@ Item {
     property string apiId: idInput.text
     width: container.width
     height: container.height
+    anchors.centerIn: parent
     id: login
     state: "enteringId"
-    visible: idInput.state != "loggedIn"
     states:
     [
         State
         {
             name: "enteringId"
             PropertyChanges { target: idInputColumn; visible: true }
-            PropertyChanges { target: partnerIdInputColumn; visible: false }
-        },
-        State
-        {
-            name: "requestInFlight"
-            PropertyChanges { target: idInputColumn; visible: false }
-            PropertyChanges { target: partnerIdInputColumn; visible: false }
-        },
-        State
-        {
-            name: "requestError"
-            PropertyChanges { target: idInputColumn; visible: false }
         },
         State
         {
             name: "enteringPartnerId"
-            PropertyChanges { target: idInputColumn; visible: false }
-            PropertyChanges { target: usernameRequestStatus; visible: false }
             PropertyChanges { target: partnerIdInputColumn; visible: true }
         },
         State
         {
             name: "loggedIn"
+            PropertyChanges { target: idInput; visible: false }
         }
     ]
-    Column
+    Grid
     {
         id: container
+        columns: 1
         // layout attributes
         leftPadding: 10
         bottomPadding: 10
@@ -55,124 +43,87 @@ Item {
         spacing: 10
         Column
         {
+            id: idInputColumn
+            visible: false
             spacing: 10
-            Column
+            width: 200
+            TextField
             {
-                id: idInputColumn
-                spacing: 10
-                Row
+                id: idInput
+                font.pixelSize: 12
+                width: parent.width
+                placeholderText: "Create an id here."
+            }
+            Button
+            {
+                text: "Continue"
+                font.pixelSize: 14
+                width: parent.width
+                onClicked:
                 {
-                    TextField
-                    {
-                        id: idInput
-                        font.pixelSize: 15
-                        placeholderText: "Create an id here."
-                    }
-                }
-                Row
-                {
-                    Button
-                    {
-                        text: "Continue"
-                        onClicked:
-                        {
-                            let message = {
-                              type : "sendPose",
-                              contents : {
-                                name : idInput.text,
-                                pose : { x: 0, y: 0, theta: 0}
-                              }
-                            };
-                            Utils.makeRequest(message, usernameRequestStatus);
-                        }
-                    }
+                    let message = {
+                      type : "sendPose",
+                      contents : {
+                        name : idInput.text,
+                        pose : { x: 0, y: 0, theta: 0}
+                      }
+                    };
+                    Utils.makeRequest(message, requestInfo);
+                    apiId = idInput.text;
                 }
             }
-            Column
+        }
+        Column
+        {
+            id: partnerIdInputColumn
+            spacing: 10
+            width: 200
+            visible: false
+            Label
             {
-                Label
+                text: "Hi, " + apiId
+                font.pixelSize: 12
+                width: parent.width
+                anchors.horizontalCenter: parent
+            }
+            TextField
+            {
+                id: partnerIdInput
+                font.pixelSize: 12
+                width: parent.width
+                placeholderText: "Enter your partner's id here."
+            }
+            Button
+            {
+                font.pixelSize: 16
+                width: parent.width
+                anchors.horizontalCenter: parent
+                text: "Connect to partner"
+                onClicked:
                 {
-                    id: usernameRequestStatus
-                    text: ""
-                    font.pixelSize: 15
-                    visible: text != ""
-                    onTextChanged:
-                    {
-                        if (text === "") {
-                            login.state = "enteringId";
-                        } else if (text === "loading") {
-                            login.state = "requestInFlight";
-                        } else if (text === "loaded") {
-                            login.state = "enteringPartnerId";
-                        } else {
-                            login.state = "requestError";
-                        }
-                    }
+                    Utils.getRobots(requestInfo, partnerIdInput.text);
                 }
             }
-            Column
+        }
+        Column
+        {
+            Label
             {
-                id: partnerIdInputColumn
-                spacing: 10
-                Row
+                id: requestInfo
+                text: ""
+                font.pixelSize: 10
+                visible: text != "" && text != "loaded"
+                onTextChanged:
                 {
-                    TextField
+                    if (text === "loaded")
                     {
-                        id: partnerIdInput
-                        font.pixelSize: 15
-                        placeholderText: "Enter your partner's id here."
-                    }
-                }
-                Row
-                {
-                    Button
-                    {
-                        id: connectButton
-                        property variant robots: []
-                        text: "Connect to partner"
-                        onClicked:
-                        {
-                            Utils.getRobots(partnerIdRequestStatus, connectButton);
-                        }
-                    }
-                }
-                Row
-                {
-                    Label
-                    {
-                        id: verifier
-                        text: ""
-                    }
-                }
-            }
-            Column
-            {
-                Label
-                {
-                    id: partnerIdRequestStatus
-                    text: ""
-                    font.pixelSize: 15
-                    visible: text != ""
-                    onTextChanged:
-                    {
-                        if (text === "") {
-                            login.state = "partnerIdRequestStatus";
-                        } else if (text === "loading") {
-                            login.state = "requestInFlight";
-                        } else if (text === "loaded") {
-                            if (connectButton.robots.indexOf(partnerIdInput.text) < 0) {
-                                verifier.text = "Hmm, that id doesn't seem to exist. Try again!";
-                                login.state = "partnerIdRequestStatus";
-                            } else {
-                              login.state = "loggedIn";
-                            }
-                        } else {
-                            login.state = "requestError";
-                        }
+                        let currState = login.state;
+                        login.state = (currState === "enteringId") ?
+                              "enteringPartnerId" : "loggedIn";
+                        console.log(login.state);
                     }
                 }
             }
         }
-
     }
 }

@@ -36,10 +36,10 @@ function sendPose(contents, requestStatus) {
             if (response.type === "success") {
                 requestStatus.text = "loaded";
             } else {
-                requestStatus.text = "Something went wrong. \nStatus code: " + xhr.status + "\nInfo: " + response.content;
+                requestStatus.text = "Something went wrong: " + xhr.status + " " + response.content;
             }
         } else {
-            requestStatus.text = "error: " + xhr.status + ": " + xhr.responseText;
+            requestStatus.text = "Couldn't connect: " + xhr.status + " " + xhr.responseText;
         }
     }
   }
@@ -51,9 +51,9 @@ function sendPose(contents, requestStatus) {
 /* Sends a message to the backend.
  *
  * requestStatus: { text: <string> }
- * requester: { robots: <array> }
+ * id: <string>
  */
-function getRobots(requestStatus, requester) {
+function getRobots(requestStatus, id) {
   var xhr = new XMLHttpRequest();
   let url = host + "/robots/";
   console.log("Opening GET request to " + url);
@@ -65,16 +65,16 @@ function getRobots(requestStatus, requester) {
         if (xhr.status === 200) {
             let response = JSON.parse(xhr.responseText);
             if (response.type === "success") {
-                requestStatus.text = "loaded";
                 console.log(response.content);
-                requester.robots = response.content;
+                let robots = response.content;
+                let isValidId = robots.indexOf(id) >= 0;
+                requestStatus.text = isValidId ?
+                    "loaded" : "Hmmm, we couldn't find that id."
             } else {
-                requestStatus.text = "Something went wrong. \nStatus code: " + xhr.status + "\nInfo: " + response.content;
-                requester.robots = [];
+                requestStatus.text = "Something went wrong: " + xhr.status + " " + response.content;
             }
         } else {
-            requestStatus.text = "error: " + xhr.status + ": " + xhr.responseText;
-            requester.robots = [];
+            requestStatus.text = "Couldn't connect: " + xhr.status + " " + xhr.responseText;
         }
     }
   }
