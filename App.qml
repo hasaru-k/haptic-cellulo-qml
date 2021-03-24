@@ -7,13 +7,15 @@ import QMLCache 1.0
 
 Item
 {
-    property string name: "player3"
+    property string userId: ""
+    property string partnerId: ""
     property double poseX: 12
     property double poseY: 13
     property double poseTheta: 5
     property bool loggedIn: false
     width: container.width
     height: container.height
+    visible: loggedIn
     // robot comm
     CelluloRobot
     {
@@ -22,9 +24,6 @@ Item
         onZoneValueChanged: {}
         onPoseChanged:
         {
-            console.log(x);
-            console.log(y);
-            console.log(theta);
             // update internal state representation
             poseX = x;
             poseY = y;
@@ -42,17 +41,15 @@ Item
             if (!loggedIn) {
               return;
             }
-            poseX += 1;
-            poseY += 1;
-            poseTheta -= 0.3;
-            let message = {
-              type : "sendPose",
-              contents : {
-                name : name,
-                pose : { x: poseX, y: poseY, theta: poseTheta}
-              }
-            };
-            Utils.makeRequest(message);
+            console.log(userId);
+            console.log(partnerId);
+            let requestStatus = { text: "" };
+            let content =
+            {
+              name : userId,
+              pose : { x: poseX, y: poseY, theta: poseTheta}
+            }
+            Utils.sendPose(content, requestStatus);
         }
     }
 

@@ -4,83 +4,90 @@ let localhost = "http://127.0.0.1:5000";
 
 // host: remotehost | localhost
 let host = remotehost;
+let REQUEST_SUCCESS = "loaded"
 
-/* Sends a message to the backend.
- *
- * message: { type: <string>, contents: <object> }
- * requestStatus: { text: <string> }
- */
-function makeRequest(message, requestStatus)
-{
-  if (message.type === "sendPose") {
-    sendPose(message.contents, requestStatus);
-  } else {
-    throw "Unsupported message type" + message.type;
-  }
-}
 
 function sendPose(contents, requestStatus) {
-  var xhr = new XMLHttpRequest();
-  let params = serialisePoseMessage(contents);
-  let url = host + "/pose/" + params;
-  console.log("Opening POST request to " + url);
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.setRequestHeader("Connection", "close");
+    var xhr = new XMLHttpRequest();
+    let params = serialisePoseMessage(contents);
+    let url = host + "/pose/" + params;
+    console.log("Opening POST request to " + url);
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.setRequestHeader("Connection", "close");
 
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-        // Request finished. Do processing here.
-        if (xhr.status === 200) {
-            let response = JSON.parse(xhr.responseText);
-            if (response.type === "success") {
-                requestStatus.text = "loaded";
-            } else {
-                requestStatus.text = "Something went wrong: " + xhr.status + " " + response.content;
-            }
-        } else {
-            requestStatus.text = "Couldn't connect: " + xhr.status + " " + xhr.responseText;
-        }
+    // callback function for when a response is received
+    let data = { requestStatus: requestStatus }
+    let onMessageReceived = function(content, data) {
+        data.requestStatus.text = REQUEST_SUCCESS;
     }
-  }
-
-  xhr.send();
-  requestStatus.text = "loading";
+    sendRequest(xhr, onMessageReceived, data);
 }
 
-/* Sends a message to the backend.
+
+/* Uploads the given userId to the backend database.
  *
  * requestStatus: { text: <string> }
  * id: <string>
  */
-function getRobots(requestStatus, id) {
+function uploadUserId(requestStatus, id) {
+    let pose = { x: -1, y: -1, theta: -1 };
+    let contents = {name: id, pose: pose};
+    sendPose(contents, requestStatus);
+}
+
+/* Gets the current list of user ids in the backend.
+ * Sets requestStatus.text to the success state if
+ * id is in that list.
+ *
+ * requestStatus: { text: <string> }
+ * id: <string>
+ */
+function validatePartnerId(requestStatus, id) {
   var xhr = new XMLHttpRequest();
   let url = host + "/robots/";
   console.log("Opening GET request to " + url);
   xhr.open("GET", url, true);
   xhr.setRequestHeader("Connection", "close");
 
+  let data = { requestStatus: requestStatus, id: id };
+  // callback function for when a response is received
+  let onMessageReceived = function(content, data) {
+      console.log(content);
+      let isValidId = content.indexOf(data.id) >= 0;
+      data.requestStatus.text = isValidId ?
+          REQUEST_SUCCESS : "Hmmm, we couldn't find that id."
+  }
+  sendRequest(xhr, onMessageReceived, data);
+}
+
+/* Sends an initialised request to the backend.
+ *
+ * xhr: <XMLHttpRequest> object with request headers set
+ * onMessageReceived: callback function for when a successful response is received,
+ *         with the following prototype: <function(contents: <json>, data: <json>)>
+ * data: <{ requestStatus: <requestStatus>, ... }>
+ *
+ */
+function sendRequest(xhr, onMessageReceived, data) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState === XMLHttpRequest.DONE) {
-        if (xhr.status === 200) {
-            let response = JSON.parse(xhr.responseText);
-            if (response.type === "success") {
-                console.log(response.content);
-                let robots = response.content;
-                let isValidId = robots.indexOf(id) >= 0;
-                requestStatus.text = isValidId ?
-                    "loaded" : "Hmmm, we couldn't find that id."
-            } else {
-                requestStatus.text = "Something went wrong: " + xhr.status + " " + response.content;
-            }
-        } else {
-            requestStatus.text = "Couldn't connect: " + xhr.status + " " + xhr.responseText;
-        }
-    }
+          switch (xhr.status) {
+              case 200:
+                let response = JSON.parse(xhr.responseText);
+                if (response.type !== "success") {
+                  data.requestStatus.text = "Something went wrong: " + xhr.status + " " + response.content;
+                  break;
+                }
+                onMessageReceived(response.content, data);
+                break;
+              default:
+                data.requestStatus.text = "Couldn't connect: " + xhr.status + " " + xhr.responseText;
+          }
+      }
   }
-
   xhr.send();
-  requestStatus.text = "loading";
+  data.requestStatus.text = "Connecting...";
 }
 
 function serialisePoseMessage(contents) {

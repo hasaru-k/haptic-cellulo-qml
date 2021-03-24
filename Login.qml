@@ -7,7 +7,8 @@ import QMLCache 1.0
 import QtQuick.Controls.Styles 1.2
 
 Item {
-    property string apiId: idInput.text
+    property string userId: ""
+    property string partnerId: ""
     width: container.width
     height: container.height
     anchors.centerIn: parent
@@ -15,20 +16,22 @@ Item {
     state: "enteringId"
     states:
     [
+        // in enteringId, both userId and partnerId are undefined
         State
         {
             name: "enteringId"
             PropertyChanges { target: idInputColumn; visible: true }
         },
+        // in enteringPartnerId, userId is defined while partnerId is undefined
         State
         {
             name: "enteringPartnerId"
             PropertyChanges { target: partnerIdInputColumn; visible: true }
         },
+        // the loggedIn state guarantees that both userId and partnerId are valid
         State
         {
             name: "loggedIn"
-            PropertyChanges { target: idInput; visible: false }
         }
     ]
     Grid
@@ -53,6 +56,7 @@ Item {
                 font.pixelSize: 12
                 width: parent.width
                 placeholderText: "Create an id here."
+                validator: RegExpValidator { regExp: /[0-9A-xa-x]+/ }
             }
             Button
             {
@@ -61,15 +65,11 @@ Item {
                 width: parent.width
                 onClicked:
                 {
-                    let message = {
-                      type : "sendPose",
-                      contents : {
-                        name : idInput.text,
-                        pose : { x: 0, y: 0, theta: 0}
-                      }
-                    };
-                    Utils.makeRequest(message, requestInfo);
-                    apiId = idInput.text;
+                    if (idInput.text === "") {
+                        requestStatus.text = "Hmm, the id can't be empty.";
+                        return;
+                    }
+                    Utils.uploadUserId(requestStatus, idInput.text);
                 }
             }
         }
@@ -81,7 +81,7 @@ Item {
             visible: false
             Label
             {
-                text: "Hi, " + apiId
+                text: "Hi, " + userId
                 font.pixelSize: 12
                 width: parent.width
                 anchors.horizontalCenter: parent
@@ -101,26 +101,43 @@ Item {
                 text: "Connect to partner"
                 onClicked:
                 {
-                    Utils.getRobots(requestInfo, partnerIdInput.text);
+                    if (partnerIdInput.text === "")
+                    {
+                        requestStatus.text = "Hmm, the id can't be empty.";
+                        return;
+                    }
+                    if (partnerIdInput.text === userId) {
+                        requestStatus.text = "Hmm, that's your id. You need your partner's.";
+                        return;
+                    }
+                    Utils.validatePartnerId(requestStatus, partnerIdInput.text);
                 }
             }
         }
         Column
         {
+            width: 200
             Label
             {
-                id: requestInfo
+                id: requestStatus
                 text: ""
-                font.pixelSize: 10
+                width: parent.width
+                wrapMode: Label.WordWrap
+                font.pixelSize: 12
                 visible: text != "" && text != "loaded"
                 onTextChanged:
                 {
+                    // transition the state iff. the request was successful
                     if (text === "loaded")
                     {
                         let currState = login.state;
-                        login.state = (currState === "enteringId") ?
-                              "enteringPartnerId" : "loggedIn";
-                        console.log(login.state);
+                        if (currState === "enteringId") {
+                            login.userId = idInput.text;
+                            login.state = "enteringPartnerId";
+                        } else {
+                            login.partnerId = partnerIdInput.text;
+                            login.state = "loggedIn";
+                        }
                     }
                 }
             }

@@ -7,10 +7,10 @@ import QMLCache 1.0
 
 Window
 {
-    minimumWidth: login.state == "loggedIn" ? app.width : 300
-    minimumHeight: login.state == "loggedIn" ? app.height : 400
-    maximumWidth: login.state == "loggedIn" ? app.width : 300
-    maximumHeight: login.state == "loggedIn" ? app.height : 400
+    minimumWidth: login.state === "loggedIn" ? app.width : 300
+    minimumHeight: login.state === "loggedIn" ? app.height : 400
+    maximumWidth: login.state === "loggedIn" ? app.width : 300
+    maximumHeight: login.state === "loggedIn" ? app.height : 400
     title: qsTr("HapticCellulo")
     visible: true
     Image
@@ -18,23 +18,28 @@ Window
         source: "cellulo.png"
         fillMode: Image.PreserveAspectCrop
         anchors.centerIn: parent
-        visible: login.state != "loggedIn"
+        visible: !(login.state === "loggedIn")
     }
-    App
+    Login
     {
-        id: app
-        loggedIn: false
-        visible: login.state == "loggedIn"
+        id: login
         OpacityAnimator on opacity
         {
             from: 0;
             to: 1;
             duration: 500
         }
+        onStateChanged: {
+          console.log(login.userId);
+          console.log(login.partnerId);
+        }
     }
-    Login
+    App
     {
-        id: login
+        userId: login.userId
+        partnerId: login.partnerId
+        id: app
+        loggedIn: login.state === "loggedIn"
         OpacityAnimator on opacity
         {
             from: 0;
