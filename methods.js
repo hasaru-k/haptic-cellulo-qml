@@ -24,6 +24,29 @@ function sendPose(contents, requestStatus) {
     sendRequest(xhr, onMessageReceived, data);
 }
 
+/* Sends a request to obtain the current pose for a robot
+ * with a given id.
+ *
+ * partnerId: <string>
+ * requestStatus: { text: <string> }
+ * poseContainer: { partnerPose: <pose> }
+ */
+function getPose(partnerId, data) {
+    var xhr = new XMLHttpRequest();
+    let url = host + "/pose/?name=" + partnerId;
+    console.log("Opening GET request to " + url);
+    xhr.open("GET", url, true);
+    xhr.setRequestHeader("Connection", "close");
+
+    // callback function for when a response is received
+    let onMessageReceived = function(content, data) {
+        data.requestStatus.text = REQUEST_SUCCESS;
+        data.app.partnerPose = content;
+        data.partnerAnimation.start();
+    }
+    sendRequest(xhr, onMessageReceived, data);
+}
+
 
 /* Uploads the given userId to the backend database.
  *

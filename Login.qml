@@ -6,6 +6,7 @@ import Cellulo 1.0
 import QMLCache 1.0
 import QtQuick.Controls.Styles 1.2
 
+
 Item {
     property string userId: ""
     property string partnerId: ""
@@ -106,10 +107,10 @@ Item {
                         requestStatus.text = "Hmm, the id can't be empty.";
                         return;
                     }
-                    if (partnerIdInput.text === userId) {
-                        requestStatus.text = "Hmm, that's your id. You need your partner's.";
-                        return;
-                    }
+//                    if (partnerIdInput.text === userId) {
+//                        requestStatus.text = "Hmm, that's your id. You need your partner's.";
+//                        return;
+//                    }
                     Utils.validatePartnerId(requestStatus, partnerIdInput.text);
                 }
             }

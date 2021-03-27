@@ -4,14 +4,17 @@ import QtQuick.Controls 2.0
 import "methods.js" as Utils
 import Cellulo 1.0
 import QMLCache 1.0
+import QtWebView 1.1
 
 Item
 {
+    id: app
     property string userId: ""
     property string partnerId: ""
-    property double poseX: 12
-    property double poseY: 13
-    property double poseTheta: 5
+    property double poseX: -1
+    property double poseY: -1
+    property double poseTheta: -1
+    property var partnerPose: {"x": -1, "y": -1, "theta": -1}
     property bool loggedIn: false
     width: container.width
     height: container.height
@@ -28,9 +31,11 @@ Item
             poseX = x;
             poseY = y;
             poseTheta = theta;
+            poseUpdateAnimation.start();
         }
     }
     // Sends pose updates to the remote server every 200ms.
+    // Activated iff. the robot is connected.
     Timer
     {
         id: poseUpdateTimer
@@ -41,6 +46,7 @@ Item
             if (!loggedIn) {
               return;
             }
+            return;
             console.log(userId);
             console.log(partnerId);
             let requestStatus = { text: "" };
@@ -50,6 +56,24 @@ Item
               pose : { x: poseX, y: poseY, theta: poseTheta}
             }
             Utils.sendPose(content, requestStatus);
+        }
+    }
+    // Sends pose updates to the remote server every 200ms.
+    // Activated iff. the robot is connected.
+    Timer
+    {
+        id: partnerPoseUpdateTimer
+        interval: 200;
+        running: true;
+        repeat: true
+        onTriggered: {
+            if (!loggedIn) {
+              return;
+            }
+            console.log(partnerId);
+            let requestStatus = { text: "" };
+            let data = { requestStatus: requestStatus, app: app, partnerAnimation: partnerAnimation };
+            Utils.getPose(partnerId, data);
         }
     }
 
@@ -64,14 +88,10 @@ Item
         rightPadding: 10
         topPadding: 10
         spacing: 10
-        Row
+        Label
         {
-            Label
-            {
-                text: "1. Connect your robot to the application below."
-                font.pixelSize: 15
-                font.italic: true
-            }
+            text: "1. Connect your robot to the application below."
+            font.pixelSize: 15
         }
         // Robot connection items
         Row
@@ -113,7 +133,8 @@ Item
                             connectionStatus: robotComm.connectionStatus
                         }
                     }
-                    Row {
+                    Row
+                    {
                         spacing: 5
                         BusyIndicator
                         {
@@ -143,14 +164,50 @@ Item
                 }
             }
         }
-        Row
+        Label
         {
-            Label
+            text: "Me: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ")"
+            font.pixelSize: 10
+            font.letterSpacing: 1.2
+            SequentialAnimation on color
             {
-                text: "Current location: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ")"
-                font.pixelSize: 15
-                font.letterSpacing: 1.2
+                id: poseUpdateAnimation
+                ColorAnimation { from: "black"; to: "#3333ff"; duration: 250 }
+                ColorAnimation { from: "#3333ff"; to: "black"; duration: 250 }
             }
+            padding: 5
+            background: Rectangle
+            {
+                color: "#e6e6ff"
+            }
+        }
+        Label
+        {
+            text: "Partner: (x=" + Math.round(partnerPose.x) + ", y=" + Math.round(partnerPose.y) + ", theta=" + Math.round(partnerPose.theta) + ")"
+            font.pixelSize: 10
+            font.letterSpacing: 1.2
+            SequentialAnimation on color
+            {
+                id: partnerAnimation
+                ColorAnimation { from: "black"; to: "#3333ff"; duration: 250 }
+                ColorAnimation { from: "#3333ff"; to: "black"; duration: 250 }
+            }
+            padding: 5
+            background: Rectangle
+            {
+                color: "#e6e6ff"
+            }
+        }
+        Label
+        {
+            text: "2. Launch the activity in browser."
+            font.pixelSize: 15
+        }
+        Button
+        {
+            text: "Go!"
+            onClicked: Qt.openUrlExternally("https://hasaru-k.github.io/haptic-cellulo?left=" + userId + "&right=" + partnerId);
+            font.pixelSize: 15
         }
     }
 }
