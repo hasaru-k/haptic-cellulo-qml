@@ -31,6 +31,7 @@ function sendPose(contents, requestStatus) {
  * requestStatus: { text: <string> }
  * poseContainer: { partnerPose: <pose> }
  */
+var mode = "vibrateMode";
 function getPose(partnerId, data) {
     var xhr = new XMLHttpRequest();
     let url = host + "/pose/?name=" + partnerId;
@@ -42,16 +43,36 @@ function getPose(partnerId, data) {
     let onMessageReceived = function(content, data) {
         data.requestStatus.text = REQUEST_SUCCESS;
         data.app.partnerPose = content;
-        data.robotComm.setGoalPosition(
-          data.app.partnerPose.x,
-          data.app.partnerPose.y,
-          30
-        );
+        robotComm.clearTracking();
+        if (mode === "vibrateMode") {
+          if (data.app.poseZone === data.app.partnerPose.zone
+              && data.app.poseZone !== "undefined") {
+            data.robotComm.simpleVibrate(10, 0, 0, 10, 100);
+          }
+        } else {
+          data.robotComm.setGoalPosition(
+            data.app.partnerPose.x,
+            data.app.partnerPose.y,
+            40
+          );
+        }
         data.partnerAnimation.start();
     }
     sendRequest(xhr, onMessageReceived, data);
 }
 
+
+function switchMode() {
+  if (mode === "vibrateMode") {
+    mode = "moveToPartnerMode";
+  } else {
+    mode = "vibrateMode";
+  }
+}
+
+function getMode() {
+  return mode;
+}
 
 /* Uploads the given userId to the backend database.
  *

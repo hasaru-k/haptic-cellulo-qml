@@ -273,5 +273,20 @@ Item
             onClicked: Qt.openUrlExternally("https://hasaru-k.github.io/haptic-cellulo?left=" + userId + "&right=" + partnerId);
             font.pixelSize: 15
         }
+        Label
+        {
+            id: modeDisplay
+            text: "Haptic mode: " + Utils.getMode();
+            font.pixelSize: 15
+        }
+        Button
+        {
+            text: "Switch haptic mode"
+            onClicked: {
+              Utils.switchMode();
+              modeDisplay.text = "Haptic mode: " + Utils.getMode();
+            }
+            font.pixelSize: 15
+        }
     }
 }
