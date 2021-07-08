@@ -34,7 +34,7 @@ function sendPose(contents, requestStatus) {
 function getPose(partnerId, data) {
     var xhr = new XMLHttpRequest();
     let url = host + "/pose/?name=" + partnerId;
-    console.log("Opening GET request to " + url);
+    // console.log("Opening GET request to " + url);
     xhr.open("GET", url, true);
     xhr.setRequestHeader("Connection", "close");
 
@@ -42,6 +42,11 @@ function getPose(partnerId, data) {
     let onMessageReceived = function(content, data) {
         data.requestStatus.text = REQUEST_SUCCESS;
         data.app.partnerPose = content;
+        data.robotComm.setGoalPosition(
+          data.app.partnerPose.x,
+          data.app.partnerPose.y,
+          30
+        );
         data.partnerAnimation.start();
     }
     sendRequest(xhr, onMessageReceived, data);
@@ -54,7 +59,7 @@ function getPose(partnerId, data) {
  * id: <string>
  */
 function uploadUserId(requestStatus, id) {
-    let pose = { x: -1, y: -1, theta: -1 };
+    let pose = { x: -1, y: -1, theta: -1, zone: "undefined" };
     let contents = {name: id, pose: pose};
     sendPose(contents, requestStatus);
 }
@@ -121,5 +126,7 @@ function serialisePoseMessage(contents) {
   "&" +
   "y=" + contents.pose.y +
   "&" +
-  "theta=" + contents.pose.theta;
+  "theta=" + contents.pose.theta +
+  "&" +
+  "zone=" + contents.pose.zone;
 }

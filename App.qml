@@ -14,17 +14,49 @@ Item
     property double poseX: -1
     property double poseY: -1
     property double poseTheta: -1
-    property var partnerPose: {"x": -1, "y": -1, "theta": -1}
+    property string poseZone: "undefined"
+    property var partnerPose: {"x": -1, "y": -1, "theta": -1, "zone": "undefined"}
     property bool loggedIn: false
     width: container.width
     height: container.height
     visible: loggedIn
+
+
+    //TODO: look into CSV logger
+    // - allows you to create logger objects
+    // - logs the position at all time of a robot
+    // - whenever the robot enters and exits a zone
+    // - useful for computing metrics
+    // ex. leader-follower pattern: look at zone sequence,
+    // position of the robot, change in direction of the robot
+    // https://github.com/chili-epfl/qml-logger/
+
+    // Next week:
+    // - haptic feedback
+    //     - haptic connection
+
+    // Flesh out understanding of the following things:
+    // - haptic understanding communication
+    // - haptic understanding the problem/situation
+    // https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.257.7356&rep=rep1&type=pdf
+
     // robot comm
     CelluloRobot
     {
         id: robotComm
-        Component.onCompleted: {}
-        onZoneValueChanged: {}
+        Component.onCompleted: {
+          zoneEngine.addNewClient(robotComm);
+        }
+        onZoneValueChanged: {
+          console.log(zone);
+          if (value == 0) {
+            poseZone = "undefined";
+            robotComm.setVisualEffect(0, "#ffffff", 100);
+          } else {
+            poseZone = zone.name;
+            robotComm.setVisualEffect(0, "#ffff00", 100);
+          }
+        }
         onPoseChanged:
         {
             // update internal state representation
@@ -32,6 +64,41 @@ Item
             poseY = y;
             poseTheta = theta;
             poseUpdateAnimation.start();
+        }
+        onConnectionStatusChanged:
+        {
+          robotComm.setVisualEffect(0, "#ffffff", 100);
+          console.log(x);
+          console.log(y);
+          console.log(theta);
+        }
+    }
+    CelluloZoneEngine
+    {
+        id: zoneEngine
+        CelluloZoneCircleInner
+        {
+            id: nucleusZone
+            x: 177
+            y: 85
+            r: 10
+            name: "nucleus"
+        }
+        CelluloZoneCircleInner
+        {
+            id: mitochondrionZone
+            x: 136
+            y: 49
+            r: 20
+            name: "mitochondrion"
+        }
+        CelluloZoneCircleInner
+        {
+            id: golgiBodyZone
+            x: 167
+            y: 150
+            r: 20
+            name: "golgiBody"
         }
     }
     // Sends pose updates to the remote server every 200ms.
@@ -46,14 +113,11 @@ Item
             if (!loggedIn) {
               return;
             }
-            return;
-            console.log(userId);
-            console.log(partnerId);
             let requestStatus = { text: "" };
             let content =
             {
               name : userId,
-              pose : { x: poseX, y: poseY, theta: poseTheta}
+              pose : { x: poseX, y: poseY, theta: poseTheta, zone: poseZone }
             }
             Utils.sendPose(content, requestStatus);
         }
@@ -70,9 +134,9 @@ Item
             if (!loggedIn) {
               return;
             }
-            console.log(partnerId);
+            // console.log(partnerId);
             let requestStatus = { text: "" };
-            let data = { requestStatus: requestStatus, app: app, partnerAnimation: partnerAnimation };
+            let data = { requestStatus: requestStatus, app: app, partnerAnimation: partnerAnimation, robotComm: robotComm };
             Utils.getPose(partnerId, data);
         }
     }
@@ -166,7 +230,7 @@ Item
         }
         Label
         {
-            text: "Me: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ")"
+            text: "Me: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ", zone=" + poseZone + ")"
             font.pixelSize: 10
             font.letterSpacing: 1.2
             SequentialAnimation on color
@@ -183,7 +247,7 @@ Item
         }
         Label
         {
-            text: "Partner: (x=" + Math.round(partnerPose.x) + ", y=" + Math.round(partnerPose.y) + ", theta=" + Math.round(partnerPose.theta) + ")"
+            text: "Partner: (x=" + Math.round(partnerPose.x) + ", y=" + Math.round(partnerPose.y) + ", theta=" + Math.round(partnerPose.theta) + ", zone=" + partnerPose.zone + ")"
             font.pixelSize: 10
             font.letterSpacing: 1.2
             SequentialAnimation on color
