@@ -14,7 +14,7 @@ Item
     property double poseX: -1
     property double poseY: -1
     property double poseTheta: -1
-    property string poseZone: "undefined"
+    property string poseZone: "cytosol"
     property var partnerPose: {"x": -1, "y": -1, "theta": -1, "zone": "cytosol"}
     property bool loggedIn: false
     width: container.width
@@ -54,7 +54,7 @@ Item
             robotComm.setVisualEffect(0, "#ffffff", 100);
           } else {
             poseZone = zone.name;
-            robotComm.setVisualEffect(0, "#ffff00", 100);
+            robotComm.setVisualEffect(0, "#ff005d", 100);
           }
         }
         onPoseChanged:
@@ -86,10 +86,18 @@ Item
         }
         CelluloZoneCircleInner
         {
-            id: mitochondrionZone
+            id: mitochondrionZone1
             x: 67
             y: 204
             r: 15
+            name: "mitochondrion"
+        }
+        CelluloZoneCircleInner
+        {
+            id: mitochondrionZone2
+            x: 165
+            y: 97
+            r: 10
             name: "mitochondrion"
         }
         CelluloZoneCircleInner

@@ -55,23 +55,30 @@ Item {
             {
                 id: idInput
                 font.pixelSize: 12
+                focus: true
                 width: parent.width
                 placeholderText: "Create an id here."
                 validator: RegExpValidator { regExp: /[0-9A-xa-x]+/ }
+                Keys.onEnterPressed: continueButton.activate();
+                Keys.onReturnPressed: continueButton.activate();
             }
             Button
             {
+                id: continueButton
                 text: "Continue"
                 font.pixelSize: 14
                 width: parent.width
-                onClicked:
+                function activate()
                 {
-                    if (idInput.text === "") {
-                        requestStatus.text = "Hmm, the id can't be empty.";
-                        return;
-                    }
-                    Utils.uploadUserId(requestStatus, idInput.text);
+                  if (idInput.text === "") {
+                      requestStatus.text = "Hmm, the id can't be empty.";
+                      return;
+                  }
+                  Utils.uploadUserId(requestStatus, idInput.text);
+                  idInput.focus = false;
+                  partnerIdInput.focus = true;
                 }
+                onClicked: continueButton.activate()
             }
         }
         Column
@@ -93,26 +100,27 @@ Item {
                 font.pixelSize: 12
                 width: parent.width
                 placeholderText: "Enter your partner's id here."
+                Keys.onEnterPressed: connectButton.activate();
+                Keys.onReturnPressed: connectButton.activate();
             }
             Button
             {
+                id: connectButton
                 font.pixelSize: 16
                 width: parent.width
                 anchors.horizontalCenter: parent
                 text: "Connect to partner"
-                onClicked:
+                function activate()
                 {
-                    if (partnerIdInput.text === "")
-                    {
-                        requestStatus.text = "Hmm, the id can't be empty.";
-                        return;
-                    }
-//                    if (partnerIdInput.text === userId) {
-//                        requestStatus.text = "Hmm, that's your id. You need your partner's.";
-//                        return;
-//                    }
-                    Utils.validatePartnerId(requestStatus, partnerIdInput.text);
+                  if (partnerIdInput.text === "")
+                  {
+                      requestStatus.text = "Hmm, the id can't be empty.";
+                      return;
+                  }
+                  Utils.validatePartnerId(requestStatus, partnerIdInput.text);
+
                 }
+                onClicked: connectButton.activate()
             }
         }
         Column

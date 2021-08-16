@@ -46,7 +46,7 @@ function getPose(partnerId, data) {
         robotComm.clearTracking();
         if (mode === "vibrateMode") {
           if (data.app.poseZone === data.app.partnerPose.zone
-              && data.app.poseZone !== "undefined") {
+              && data.app.poseZone !== "cytosol") {
             data.robotComm.simpleVibrate(10, 0, 0, 10, 100);
           }
         } else {
