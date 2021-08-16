@@ -15,7 +15,7 @@ Item
     property double poseY: -1
     property double poseTheta: -1
     property string poseZone: "undefined"
-    property var partnerPose: {"x": -1, "y": -1, "theta": -1, "zone": "undefined"}
+    property var partnerPose: {"x": -1, "y": -1, "theta": -1, "zone": "cytosol"}
     property bool loggedIn: false
     width: container.width
     height: container.height
@@ -50,7 +50,7 @@ Item
         onZoneValueChanged: {
           console.log(zone);
           if (value == 0) {
-            poseZone = "undefined";
+            poseZone = "cytosol";
             robotComm.setVisualEffect(0, "#ffffff", 100);
           } else {
             poseZone = zone.name;
@@ -79,25 +79,33 @@ Item
         CelluloZoneCircleInner
         {
             id: nucleusZone
-            x: 177
-            y: 85
-            r: 10
+            x: 124
+            y: 130
+            r: 15
             name: "nucleus"
         }
         CelluloZoneCircleInner
         {
             id: mitochondrionZone
-            x: 136
-            y: 49
-            r: 20
+            x: 67
+            y: 204
+            r: 15
             name: "mitochondrion"
         }
         CelluloZoneCircleInner
         {
+            id: lysosomeZone
+            x: 51
+            y: 105
+            r: 15
+            name: "lysosome"
+        }
+        CelluloZoneCircleInner
+        {
             id: golgiBodyZone
-            x: 167
-            y: 150
-            r: 20
+            x: 124
+            y: 214
+            r: 15
             name: "golgiBody"
         }
     }
@@ -270,7 +278,7 @@ Item
         Button
         {
             text: "Go!"
-            onClicked: Qt.openUrlExternally("https://hasaru-k.github.io/haptic-cellulo?left=" + userId + "&right=" + partnerId);
+            onClicked: Qt.openUrlExternally("https://hasaru-k.github.io/haptic-cellulo?player=" + userId + "&partner=" + partnerId);
             font.pixelSize: 15
         }
         Label

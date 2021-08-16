@@ -80,7 +80,7 @@ function getMode() {
  * id: <string>
  */
 function uploadUserId(requestStatus, id) {
-    let pose = { x: -1, y: -1, theta: -1, zone: "undefined" };
+    let pose = { x: -1, y: -1, theta: -1, zone: "cytosol" };
     let contents = {name: id, pose: pose};
     sendPose(contents, requestStatus);
 }
