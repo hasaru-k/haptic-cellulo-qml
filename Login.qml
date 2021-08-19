@@ -8,6 +8,7 @@ import QtQuick.Controls.Styles 1.2
 
 
 Item {
+    // the Login item has an obligation to fill in and validate the userId and partnerId fields
     property string userId: ""
     property string partnerId: ""
     width: container.width
@@ -50,11 +51,20 @@ Item {
             id: idInputColumn
             visible: false
             spacing: 10
-            width: 200
-            TextField
+            width: 160
+            FlowLabel
+            {
+                width: parent.width
+                text: "HapticCellulo"
+                font.pixelSize: 20
+                bottomPadding: 70
+                font.family: "Roboto"
+                horizontalAlignment: Text.AlignHCenter
+                color: "#1f1f1f"
+            }
+            InputForm
             {
                 id: idInput
-                font.pixelSize: 12
                 focus: true
                 width: parent.width
                 placeholderText: "Create an id here."
@@ -62,11 +72,11 @@ Item {
                 Keys.onEnterPressed: continueButton.activate();
                 Keys.onReturnPressed: continueButton.activate();
             }
-            Button
+            SuccessButton
             {
                 id: continueButton
                 text: "Continue"
-                font.pixelSize: 14
+                font.pixelSize: 12
                 width: parent.width
                 function activate()
                 {
@@ -85,30 +95,26 @@ Item {
         {
             id: partnerIdInputColumn
             spacing: 10
-            width: 200
+            width: 180
             visible: false
-            Label
+            FlowLabel
             {
-                text: "Hi, " + userId
-                font.pixelSize: 12
+                text: "Hi, " + userId + "!"
                 width: parent.width
-                anchors.horizontalCenter: parent
             }
-            TextField
+            InputForm
             {
                 id: partnerIdInput
-                font.pixelSize: 12
                 width: parent.width
                 placeholderText: "Enter your partner's id here."
                 Keys.onEnterPressed: connectButton.activate();
                 Keys.onReturnPressed: connectButton.activate();
             }
-            Button
+            SuccessButton
             {
                 id: connectButton
-                font.pixelSize: 16
+                font.pixelSize: 9
                 width: parent.width
-                anchors.horizontalCenter: parent
                 text: "Connect to partner"
                 function activate()
                 {
@@ -125,14 +131,14 @@ Item {
         }
         Column
         {
-            width: 200
-            Label
+            width: 160
+            FlowLabel
             {
                 id: requestStatus
                 text: ""
+                font.pixelSize: 9
                 width: parent.width
                 wrapMode: Label.WordWrap
-                font.pixelSize: 12
                 visible: text != "" && text != "loaded"
                 onTextChanged:
                 {

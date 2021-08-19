@@ -4,5 +4,9 @@
         <file>App.qml</file>
         <file>Login.qml</file>
         <file>cellulo.png</file>
+        <file>SuccessButton.qml</file>
+        <file>FlowLabel.qml</file>
+        <file>InputForm.qml</file>
+        <file>InfoLabel.qml</file>
     </qresource>
 </RCC>

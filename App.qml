@@ -20,8 +20,6 @@ Item
     width: container.width
     height: container.height
     visible: loggedIn
-
-
     //TODO: look into CSV logger
     // - allows you to create logger objects
     // - logs the position at all time of a robot
@@ -163,146 +161,132 @@ Item
     {
         id: container
         // layout attributes
-        leftPadding: 10
-        bottomPadding: 10
-        rightPadding: 10
-        topPadding: 10
-        spacing: 10
-        Label
+        leftPadding: 15
+        bottomPadding: 15
+        rightPadding: 15
+        topPadding: 15
+        spacing: 15
+        width: 500
+        anchors.centerIn: parent
+        FlowLabel
         {
             text: "1. Connect your robot to the application below."
-            font.pixelSize: 15
         }
         // Robot connection items
-        Row
+        GroupBox
         {
-            GroupBox
-            {
-                id: addressBox
-                Column{
+            id: addressBox
+            anchors.horizontalCenter: parent.horizontalCenter
+            Column {
+                spacing: 5
+                CelluloBluetoothScanner
+                {
+                    id: scanner
+                    onRobotDiscovered:
+                    {
+                        var newAddresses = macAddrSelector.addresses;
+                        if (newAddresses.indexOf(macAddr) < 0)
+                        {
+                            console.log(macAddr + " discovered.");
+                            newAddresses.push(macAddr);
+                            newAddresses.sort();
+                        }
+                        macAddrSelector.addresses = newAddresses;
+                        QMLCache.write("addresses", macAddrSelector.addresses.join(','));
+                    }
+                }
+                Row
+                {
                     spacing: 5
-                    CelluloBluetoothScanner
+                    MacAddrSelector
                     {
-                        id: scanner
-                        onRobotDiscovered:
+                        id: macAddrSelector
+                        addresses: QMLCache.read("addresses").split(",")
+                        onConnectRequested:
                         {
-                            var newAddresses = macAddrSelector.addresses;
-                            if (newAddresses.indexOf(macAddr) < 0)
-                            {
-                                console.log(macAddr + " discovered.");
-                                newAddresses.push(macAddr);
-                                newAddresses.sort();
-                            }
-                            macAddrSelector.addresses = newAddresses;
-                            QMLCache.write("addresses", macAddrSelector.addresses.join(','));
+                            robotComm.localAdapterMacAddr = selectedLocalAdapterAddress;
+                            robotComm.macAddr = selectedAddress;
+                        }
+                        onDisconnectRequested: robotComm.disconnectFromServer()
+                        connectionStatus: robotComm.connectionStatus
+                    }
+                }
+                Row
+                {
+                    spacing: 5
+                    BusyIndicator
+                    {
+                        running: scanner.scanning
+                        height: scanButton.height
+                    }
+                    Button
+                    {
+                        id: scanButton
+                        text: "Scan"
+                        onClicked: scanner.start()
+                    }
+                    Button
+                    {
+                        text: "Clear List"
+                        onClicked: {
+                            macAddrSelector.addresses = [];
+                            QMLCache.write("addresses","");
                         }
                     }
-                    Row
+                    Button
                     {
-                        spacing: 5
-                        MacAddrSelector
-                        {
-                            id: macAddrSelector
-                            addresses: QMLCache.read("addresses").split(",")
-                            onConnectRequested:
-                            {
-                                robotComm.localAdapterMacAddr = selectedLocalAdapterAddress;
-                                robotComm.macAddr = selectedAddress;
-                            }
-                            onDisconnectRequested: robotComm.disconnectFromServer()
-                            connectionStatus: robotComm.connectionStatus
-                        }
-                    }
-                    Row
-                    {
-                        spacing: 5
-                        BusyIndicator
-                        {
-                            running: scanner.scanning
-                            height: scanButton.height
-                        }
-                        Button
-                        {
-                            id: scanButton
-                            text: "Scan"
-                            onClicked: scanner.start()
-                        }
-                        Button
-                        {
-                            text: "Clear List"
-                            onClicked: {
-                                macAddrSelector.addresses = [];
-                                QMLCache.write("addresses","");
-                            }
-                        }
-                        Button
-                        {
-                            text: "Reset connection"
-                            onClicked: robotComm.reset()
-                        }
+                        text: "Reset connection"
+                        onClicked: robotComm.reset()
                     }
                 }
             }
         }
-        Label
+        InfoLabel
         {
-            text: "Me: (x=" + Math.round(poseX) + ", y=" + Math.round(poseY) + ", theta=" + Math.round(poseTheta) + ", zone=" + poseZone + ")"
-            font.pixelSize: 10
-            font.letterSpacing: 1.2
+            text: "My location: " + poseZone
             SequentialAnimation on color
             {
                 id: poseUpdateAnimation
                 ColorAnimation { from: "black"; to: "#3333ff"; duration: 250 }
                 ColorAnimation { from: "#3333ff"; to: "black"; duration: 250 }
             }
-            padding: 5
-            background: Rectangle
-            {
-                color: "#e6e6ff"
-            }
         }
-        Label
+        InfoLabel
         {
-            text: "Partner: (x=" + Math.round(partnerPose.x) + ", y=" + Math.round(partnerPose.y) + ", theta=" + Math.round(partnerPose.theta) + ", zone=" + partnerPose.zone + ")"
-            font.pixelSize: 10
-            font.letterSpacing: 1.2
+            text: "Partner location: " + partnerPose.zone
             SequentialAnimation on color
             {
                 id: partnerAnimation
                 ColorAnimation { from: "black"; to: "#3333ff"; duration: 250 }
                 ColorAnimation { from: "#3333ff"; to: "black"; duration: 250 }
             }
-            padding: 5
-            background: Rectangle
-            {
-                color: "#e6e6ff"
-            }
         }
-        Label
+        FlowLabel
         {
             text: "2. Launch the activity in browser."
-            font.pixelSize: 15
         }
-        Button
+        SuccessButton
         {
-            text: "Go!"
+            text: "Launch!"
             onClicked: Qt.openUrlExternally("https://hasaru-k.github.io/haptic-cellulo?player=" + userId + "&partner=" + partnerId);
-            font.pixelSize: 15
         }
-        Label
+        FlowLabel
         {
+            text: "Mode: " + Utils.getMode()
+            font.pixelSize: 8
+            topPadding: 20
             id: modeDisplay
-            text: "Haptic mode: " + Utils.getMode();
-            font.pixelSize: 15
+            width: parent.width
         }
-        Button
+        SuccessButton
         {
-            text: "Switch haptic mode"
+            text: "Toggle mode"
             onClicked: {
               Utils.switchMode();
-              modeDisplay.text = "Haptic mode: " + Utils.getMode();
+              modeDisplay.text = "Mode: " + Utils.getMode();
             }
-            font.pixelSize: 15
+            font.pixelSize: 7
+            buttonColor: "#ff96ad"
         }
     }
 }
