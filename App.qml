@@ -4,6 +4,7 @@ import QtQuick.Controls 2.0
 import "methods.js" as Utils
 import Cellulo 1.0
 import QMLCache 1.0
+import Logger 1.0
 import QtWebView 1.1
 
 Item
@@ -20,40 +21,55 @@ Item
     width: container.width
     height: container.height
     visible: loggedIn
-    //TODO: look into CSV logger
-    // - allows you to create logger objects
-    // - logs the position at all time of a robot
-    // - whenever the robot enters and exits a zone
-    // - useful for computing metrics
-    // ex. leader-follower pattern: look at zone sequence,
-    // position of the robot, change in direction of the robot
-    // https://github.com/chili-epfl/qml-logger/
-
-    // Next week:
-    // - haptic feedback
-    //     - haptic connection
-
-    // Flesh out understanding of the following things:
-    // - haptic understanding communication
-    // - haptic understanding the problem/situation
-    // https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.257.7356&rep=rep1&type=pdf
-
-    // robot comm
+    Component.onCompleted:
+    {
+      zoneLogger.log([poseZone]);
+      poseLogger.log([poseX, poseY, poseTheta]);
+      let connectionStatus = CelluloBluetoothEnums.ConnectionStatusDisconnected;
+      connectionStatusLogger.log([CelluloBluetoothEnums.ConnectionStatusString(connectionStatus)]);
+    }
+    /*
+     * LOGGERS
+     */
+    CSVLogger
+    {
+        id: zoneLogger
+        filename: Utils.createFileName(["zoneChanged", Utils.getDate()]);
+        header: ["zoneValue"]
+    }
+    CSVLogger
+    {
+        id: poseLogger
+        filename: Utils.createFileName(["poseChanged", Utils.getDate()]);
+        header: ["x","y","theta"]
+    }
+    CSVLogger
+    {
+        id: connectionStatusLogger
+        filename: Utils.createFileName(["connectionStatus", Utils.getDate()]);
+        header: ["connectionStatusString"]
+    }
+    /*
+     * ROBOT API
+     */
     CelluloRobot
     {
         id: robotComm
-        Component.onCompleted: {
-          zoneEngine.addNewClient(robotComm);
+        Component.onCompleted:
+        {
+            zoneEngine.addNewClient(robotComm);
         }
         onZoneValueChanged: {
-          console.log(zone);
-          if (value == 0) {
-            poseZone = "cytosol";
-            robotComm.setVisualEffect(0, "#ffffff", 100);
-          } else {
-            poseZone = zone.name;
-            robotComm.setVisualEffect(0, "#ff005d", 100);
-          }
+            console.log(zone);
+            // not in a zone
+            if (value == 0) {
+              poseZone = "cytosol";
+              robotComm.setVisualEffect(0, "#ffffff", 100);
+            } else {
+              poseZone = zone.name;
+              robotComm.setVisualEffect(0, "#ff005d", 100);
+            }
+            zoneLogger.log([poseZone]);
         }
         onPoseChanged:
         {
@@ -62,15 +78,20 @@ Item
             poseY = y;
             poseTheta = theta;
             poseUpdateAnimation.start();
+            poseLogger.log([poseX, poseY, poseTheta]);
         }
         onConnectionStatusChanged:
         {
-          robotComm.setVisualEffect(0, "#ffffff", 100);
-          console.log(x);
-          console.log(y);
-          console.log(theta);
+            robotComm.setVisualEffect(0, "#ffffff", 100);
+            console.log(x);
+            console.log(y);
+            console.log(theta);
+            connectionStatusLogger.log([CelluloBluetoothEnums.ConnectionStatusString(connectionStatus)]);
         }
     }
+    /*
+     * ZONE DEFINITIONS
+     */
     CelluloZoneEngine
     {
         id: zoneEngine
@@ -115,8 +136,12 @@ Item
             name: "golgiBody"
         }
     }
-    // Sends pose updates to the remote server every 200ms.
-    // Activated iff. the robot is connected.
+    /*
+     * TIMER DEFINITIONS
+     *
+     * Sends pose updates to the remote server every 200ms.
+     * Activated after logging in.
+     */
     Timer
     {
         id: poseUpdateTimer
@@ -136,8 +161,10 @@ Item
             Utils.sendPose(content, requestStatus);
         }
     }
-    // Sends pose updates to the remote server every 200ms.
-    // Activated iff. the robot is connected.
+    /*
+     * Fetches pose updates for the partner from remote server every 200ms.
+     * Activated after logging in.
+     */
     Timer
     {
         id: partnerPoseUpdateTimer
@@ -154,9 +181,9 @@ Item
             Utils.getPose(partnerId, data);
         }
     }
-
-    // Visual components follow
-
+    /*
+     * UI COMPONENTS
+     */
     Column
     {
         id: container

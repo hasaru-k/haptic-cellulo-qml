@@ -5,13 +5,15 @@ let localhost = "http://127.0.0.1:5000";
 // host: remotehost | localhost
 let host = remotehost;
 let REQUEST_SUCCESS = "loaded"
-
+let verbose = true;
 
 function sendPose(contents, requestStatus) {
     var xhr = new XMLHttpRequest();
     let params = serialisePoseMessage(contents);
     let url = host + "/pose/" + params;
-    console.log("Opening POST request to " + url);
+    if (verbose) {
+      console.log("POST " + url);
+    }
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.setRequestHeader("Connection", "close");
@@ -35,7 +37,9 @@ var mode = "vibrateMode";
 function getPose(partnerId, data) {
     var xhr = new XMLHttpRequest();
     let url = host + "/pose/?name=" + partnerId;
-    // console.log("Opening GET request to " + url);
+    if (verbose) {
+      console.log("GET " + url);
+    }
     xhr.open("GET", url, true);
     xhr.setRequestHeader("Connection", "close");
 
@@ -47,7 +51,7 @@ function getPose(partnerId, data) {
         if (mode === "vibrateMode") {
           if (data.app.poseZone === data.app.partnerPose.zone
               && data.app.poseZone !== "cytosol") {
-            data.robotComm.simpleVibrate(10, 0, 0, 10, 100);
+            data.robotComm.simpleVibrate(15, 0, 0, 10, 100);
           }
         } else {
           data.robotComm.setGoalPosition(
@@ -95,14 +99,18 @@ function uploadUserId(requestStatus, id) {
 function validatePartnerId(requestStatus, id) {
   var xhr = new XMLHttpRequest();
   let url = host + "/robots/";
-  console.log("Opening GET request to " + url);
+  if (verbose) {
+    console.log("GET " + url);
+  }
   xhr.open("GET", url, true);
   xhr.setRequestHeader("Connection", "close");
 
   let data = { requestStatus: requestStatus, id: id };
   // callback function for when a response is received
   let onMessageReceived = function(content, data) {
-      console.log(content);
+      if (verbose) {
+        console.log("received: " + content);
+      }
       let isValidId = content.indexOf(data.id) >= 0;
       data.requestStatus.text = isValidId ?
           REQUEST_SUCCESS : "Hmmm, we couldn't find that id."
@@ -150,4 +158,12 @@ function serialisePoseMessage(contents) {
   "theta=" + contents.pose.theta +
   "&" +
   "zone=" + contents.pose.zone;
+}
+
+function createFileName(args) {
+  return args.join("_") + ".csv";
+}
+
+function getDate() {
+  return Qt.formatDateTime(new Date(), "ddd-dd-MM-yyyy_hh:mm:ss");
 }

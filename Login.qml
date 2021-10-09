@@ -68,7 +68,6 @@ Item {
                 focus: true
                 width: parent.width
                 placeholderText: "Create an id here."
-                validator: RegExpValidator { regExp: /[0-9A-xa-x]+/ }
                 Keys.onEnterPressed: continueButton.activate();
                 Keys.onReturnPressed: continueButton.activate();
             }

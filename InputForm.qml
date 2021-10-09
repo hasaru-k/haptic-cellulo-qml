@@ -9,4 +9,5 @@ TextField
     font.pixelSize: 10
     color: "#1f1f1f"
     font.weight: Font.Light
+    validator: RegExpValidator { regExp: /[0-9A-za-z]+/ }
 }
